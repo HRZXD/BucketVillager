@@ -1,0 +1,15 @@
+name: BucketVillager
+version: 1.1
+main: me.hrzplugin.Main
+api-version: 1.21
+author: hrz
+description: A plugin to capture and place NPCs using buckets.
+commands:
+  spawnnpc:
+    description: Spawns an NPC.
+    usage: /spawnnpc
+    permission: npcbucket.spawn
+permissions:
+  npcbucket.spawn:
+    description: Allows the player to spawn an NPC.
+    default: op
