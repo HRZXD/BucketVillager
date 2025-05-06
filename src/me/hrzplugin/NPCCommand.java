@@ -10,6 +10,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.entity.Villager;
 
 public class NPCCommand implements CommandExecutor {
+    private final WordJsonHandler wordHandler;
+    public NPCCommand(Main plugin) { // Pass your plugin here
+        this.wordHandler = new WordJsonHandler(plugin); // Correct
+    }
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (!(sender instanceof Player)) {
@@ -22,6 +26,8 @@ public class NPCCommand implements CommandExecutor {
             player.sendMessage(ChatColor.RED + "You don't have permission to use this command!");
             return true;
         }
+        // Data Saving and Loading
+        wordHandler.appendWord("NewWord_" + System.currentTimeMillis());
 
         // Spawn NPC
         Villager npc = (Villager) player.getWorld().spawnEntity(player.getLocation(), EntityType.VILLAGER);

@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="BucketVillager:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/BucketVillager_jar</output-path>
+    <root id="archive" name="BucketVillager.jar">
+      <element id="module-output" name="BucketVillager" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/out/artifacts/BucketVillager_jar/BucketVillager.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$USER_HOME$/Downloads/spigot-api-1.21.4-R0.1-20250309.224341-47.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

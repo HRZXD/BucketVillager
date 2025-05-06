@@ -3,6 +3,7 @@ package me.hrzplugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
+
     @Override
     public void onEnable() {
         getLogger().info("✅ NPC Bucket Plugin Enabled!");
@@ -12,7 +13,7 @@ public class Main extends JavaPlugin {
 
         // Register commands
         if (getCommand("spawnnpc") != null) {
-            this.getCommand("spawnnpc").setExecutor(new NPCCommand());
+            this.getCommand("spawnnpc").setExecutor(new NPCCommand(this));
         } else {
             getLogger().warning("⚠ Command 'spawnnpc' is not defined in plugin.yml!");
         }
