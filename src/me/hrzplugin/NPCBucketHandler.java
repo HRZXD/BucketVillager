@@ -2,10 +2,7 @@ package me.hrzplugin;
 
 import com.google.gson.Gson;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
@@ -27,6 +24,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.Material;
 import org.bukkit.util.RayTraceResult;
 
+import javax.naming.Name;
+
 public class NPCBucketHandler implements Listener {
     private final JavaPlugin plugin;
     private final NPCJsonHandler nPCJsonHandler;
@@ -34,12 +33,11 @@ public class NPCBucketHandler implements Listener {
     private static final NamespacedKey PROFESSION_KEY = new NamespacedKey("npcbucket", "profession");
     private static final NamespacedKey LEVEL_KEY = new NamespacedKey("npcbucket", "level");
     private static final NamespacedKey TYPE_KEY = new NamespacedKey("npcbucket", "type");
-
+    private static final NamespacedKey TRADE_KEY = new NamespacedKey("npcbucket" , "trades");
     public NPCBucketHandler(JavaPlugin plugin) {
         this.plugin = plugin;
         this.nPCJsonHandler = new NPCJsonHandler(plugin);
     }
-
 
     @EventHandler
     public void onRightClickNPC(PlayerInteractEntityEvent event) {
@@ -132,6 +130,11 @@ public class NPCBucketHandler implements Listener {
 
             npcBucket.setItemMeta(meta);
 
+            System.out.println(tradeList);
+            Gson gson = new Gson();
+//            String tradesJson = gson.toJson(tradeList);
+//            data.set(TRADE_KEY, PersistentDataType.STRING, tradesJson);
+
             // Set the item in player's hand
             player.getInventory().setItemInMainHand(npcBucket);
             player.sendMessage(ChatColor.GREEN + "You captured an NPC in a bucket!");
@@ -159,6 +162,7 @@ public class NPCBucketHandler implements Listener {
                 String professionString = data.get(PROFESSION_KEY, PersistentDataType.STRING);
                 Integer level = data.get(LEVEL_KEY, PersistentDataType.INTEGER);
                 String typeString = data.get(TYPE_KEY, PersistentDataType.STRING);
+                String tradesJson = data.get(TRADE_KEY, PersistentDataType.STRING);
 
                 if (professionString == null || level == null || typeString == null) {
                     player.sendMessage(ChatColor.RED + "Error: Invalid NPC data in bucket!");
@@ -168,14 +172,24 @@ public class NPCBucketHandler implements Listener {
                 Villager.Profession profession = Villager.Profession.valueOf(professionString);
                 Villager.Type type = Villager.Type.valueOf(typeString);
 
+                List<TradeData> trades = new ArrayList<>();
+                if (tradesJson != null) {
+                    Gson gson = new Gson();
+                    TradeData[] loadedTrades = gson.fromJson(tradesJson, TradeData[].class);
+                    if (loadedTrades != null) {
+                        trades = List.of(loadedTrades);
+                    }
+                }
+
                 // Spawn the NPC
                 Villager npc = player.getWorld().spawn(spawnedLocation, Villager.class);
                 npc.addScoreboardTag("npcbucket_spawned");
 
+                List<TradeData> finalTrades = trades;
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        applyVillagerData(npc, npcName, profession, level, type, player);
+                        applyVillagerData(npc, npcName, profession, level, type, finalTrades);
                     }
                 }.runTaskLater(plugin, 10L);
 
@@ -196,8 +210,8 @@ public class NPCBucketHandler implements Listener {
         }
     }
 
-    private void applyVillagerData(Villager villager, String name, Villager.Profession profession, int level, Villager.Type type, Player player) {
-        villager.setAI(false); // Temporarily disable AI to prevent reset
+    private void applyVillagerData(Villager villager, String name, Villager.Profession profession, int level, Villager.Type type, List<TradeData> trades) {
+        villager.setAI(false);
         villager.setSilent(true);
         villager.setInvulnerable(true);
         villager.setPersistent(true);
@@ -207,7 +221,7 @@ public class NPCBucketHandler implements Listener {
 
             @Override
             public void run() {
-                if (counter >= 100) { // Keep applying data for 5 seconds
+                if (counter >= 100) {
                     villager.setAI(true);
                     villager.setSilent(false);
                     cancel();
@@ -221,7 +235,17 @@ public class NPCBucketHandler implements Listener {
                 villager.setVillagerLevel(level);
                 counter++;
             }
-        }.runTaskTimer(plugin, 0L, 1L); // Apply settings every tick for 5 seconds
+        }.runTaskTimer(plugin, 0L, 1L);
+
+        List<MerchantRecipe> recipes = new ArrayList<>();
+        for (TradeData trade : trades) {
+            MerchantRecipe recipe = new MerchantRecipe(trade.result, trade.maxUses);
+            recipe.setUses(trade.uses);
+            recipe.setVillagerExperience(trade.experience);
+            recipe.setIngredients(trade.ingredients);
+            recipes.add(recipe);
+        }
+        villager.setRecipes(recipes);
     }
     // 🔹 Simple structure to store trade data
     static class TradeData {
